@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:jaxws="http://cxf.apache.org/jaxws" xmlns:sec="http://cxf.apache.org/configuration/security"
+       xmlns:http="http://cxf.apache.org/transports/http/configuration"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       					   http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+       					   http://cxf.apache.org/jaxws http://cxf.apache.org/schemas/jaxws.xsd
+       					   http://cxf.apache.org/configuration/security http://cxf.apache.org/schemas/configuration/security.xsd
+       					   http://cxf.apache.org/transports/http/configuration http://cxf.apache.org/schemas/configuration/http-conf.xsd">
+
+    <!-- konfiguracia -->
+    <util:properties id="wsProperties" location="classpath:/properties/ws.properties" />
+
+    <!-- security nastavenia -->
+    <bean id="upvsWsCryptoProperties" class="org.apache.wss4j.common.crypto.Merlin">
+        <constructor-arg index="0">
+            <util:properties>
+                <prop key="org.apache.wss4j.crypto.merlin.keystore.file">#{wsProperties['upvs.crypto.keystore']}</prop>
+                <prop key="org.apache.wss4j.crypto.merlin.keystore.type">#{wsProperties['upvs.crypto.keystore.type']}</prop>
+                <prop key="org.apache.wss4j.crypto.merlin.keystore.alias">#{wsProperties['upvs.crypto.keystore.alias']}</prop>
+                <prop key="org.apache.wss4j.crypto.merlin.keystore.password">#{wsProperties['upvs.crypto.keystore.password']}</prop>
+            </util:properties>
+        </constructor-arg>
+        <constructor-arg index="1">
+            <null/>
+        </constructor-arg>
+        <constructor-arg index="2">
+            <null/>
+        </constructor-arg>
+    </bean>
+
+    <!-- password callback handler pre security nastavenia -->
+    <bean id="upvsPwdCallbackHandler" class="eu.redbyte.upvsdemo.security.PasswordCallbackHandler">
+        <constructor-arg index="0" value="#{wsProperties['upvs.crypto.keystore.alias']}"/>
+        <constructor-arg index="1" value="#{wsProperties['upvs.crypto.keystore.keyPassword']}"/>
+    </bean>
+
+    <!-- SSL nastavenia pre STS -->
+    <http:conduit name="{http://xmlns.oracle.com/sts/schema/sts-11g.xsd}wss11x509-port.http-conduit">
+        <http:tlsClientParameters>
+            <sec:trustManagers>
+                <sec:keyStore type="#{wsProperties['upvs.ssl.truststore.type']}" password="#{wsProperties['upvs.ssl.truststore.password']}"
+                              resource="#{wsProperties['upvs.ssl.truststore']}"/>
+            </sec:trustManagers>
+        </http:tlsClientParameters>
+    </http:conduit>
+
+    <!-- STS client -->
+    <bean id="stsClient" class="org.apache.cxf.ws.security.trust.STSClient">
+        <constructor-arg ref="cxf"/>
+        <property name="wsdlLocation" value="wsdl/sts/wss11x509.wsdl"/>
+        <property name="serviceName" value="{http://xmlns.oracle.com/sts/schema/sts-11g.xsd}wss11x509-serviceSoap12"/>
+        <property name="endpointName" value="{http://xmlns.oracle.com/sts/schema/sts-11g.xsd}wss11x509-port"/>
+        <property name="location" value="#{wsProperties['upvs.sts']}"/>
+        <property name="sendRenewing" value="false"/>
+        <property name="allowRenewing" value="false"/>
+        <property name="properties">
+            <map>
+                <entry value-ref="upvsWsCryptoProperties">
+                    <key>
+                        <util:constant static-field="org.apache.cxf.ws.security.SecurityConstants.SIGNATURE_CRYPTO"/>
+                    </key>
+                </entry>
+                <entry value-ref="upvsPwdCallbackHandler">
+                    <key>
+                        <util:constant static-field="org.apache.cxf.ws.security.SecurityConstants.CALLBACK_HANDLER"/>
+                    </key>
+                </entry>
+            </map>
+        </property>
+    </bean>
+
+    <!-- SSL nastavenia pre sluzby IAM -->
+    <http:conduit name="{http://schemas.gov.sk/identity/service/1.7}iamwsport.http-conduit">
+        <http:tlsClientParameters>
+            <sec:trustManagers>
+                <sec:keyStore type="#{wsProperties['upvs.ssl.truststore.type']}" password="#{wsProperties['upvs.ssl.truststore.password']}"
+                              resource="#{wsProperties['upvs.ssl.truststore']}"/>
+            </sec:trustManagers>
+        </http:tlsClientParameters>
+    </http:conduit>
+
+    <!-- UPVS IAM client -->
+    <jaxws:client id="IdentityServices"
+                  serviceClass="sk.gov.schemas.identity.service._1_7.IdentityServices"
+                  address="#{wsProperties['upvs.iam']}"
+                  wsdlLocation="wsdl/identity/GetIdentityService.wsdl"
+                  endpointName="n:iamwsport"
+                  serviceName="n:IdentityServicesExt"
+                  xmlns:n="http://schemas.gov.sk/identity/service/1.7">
+
+        <jaxws:properties>
+            <entry value-ref="stsClient">
+                <key>
+                    <util:constant static-field="org.apache.cxf.ws.security.SecurityConstants.STS_CLIENT"/>
+                </key>
+            </entry>
+        </jaxws:properties>
+        <jaxws:features>
+            <wsa:addressing allowDuplicates="false" xmlns:wsa="http://cxf.apache.org/ws/addressing"/>
+        </jaxws:features>
+    </jaxws:client>
+
+</beans>

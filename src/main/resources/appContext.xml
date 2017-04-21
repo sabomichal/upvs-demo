@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:http="http://cxf.apache.org/transports/http/configuration"
+       xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       					   http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+       					   http://cxf.apache.org/transports/http/configuration http://cxf.apache.org/schemas/configuration/http-conf.xsd
+                           http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd">
+
+    <context:component-scan base-package="eu.redbyte"/>
+    <context:annotation-config/>
+
+    <import resource="classpath:META-INF/cxf/cxf.xml"/>
+    <import resource="classpath:META-INF/cxf/cxf-servlet.xml"/>
+
+    <import resource="samlContext.xml"/>
+    <import resource="wsContext.xml"/>
+
+    <!-- rest services -->
+    <jaxrs:server address="/login">
+        <jaxrs:serviceBeans>
+            <ref bean="ssoLoginService"/>
+        </jaxrs:serviceBeans>
+        <jaxrs:providers>
+            <ref bean="redirectGetFilter"/>
+            <ref bean="webApplicationExceptionMapper"/>
+        </jaxrs:providers>
+        <!--<jaxrs:features>
+            <cxf:logging/>
+        </jaxrs:features>-->
+    </jaxrs:server>
+
+    <jaxrs:server address="/edesk">
+        <jaxrs:serviceBeans>
+            <ref bean="identityService"/>
+        </jaxrs:serviceBeans>
+        <jaxrs:providers>
+            <ref bean="webApplicationExceptionMapper"/>
+        </jaxrs:providers>
+        <!--<jaxrs:features>
+            <cxf:logging/>
+        </jaxrs:features>-->
+    </jaxrs:server>
+
+</beans>

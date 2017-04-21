@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+							http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+							http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd">
+
+	<util:properties id="samlProperties" location="classpath:/properties/saml.properties" />
+
+	<bean id="samlSignatureCrypto" class="org.apache.wss4j.common.crypto.Merlin">
+		<constructor-arg index="0">
+			<util:properties id="samlSignatureProperties">
+				<prop key="org.apache.wss4j.crypto.merlin.keystore.file">#{samlProperties['saml2.sp.keystore']}</prop>
+				<prop key="org.apache.wss4j.crypto.merlin.keystore.type">#{samlProperties['saml2.sp.keystore.type']}</prop>
+				<prop key="org.apache.wss4j.crypto.merlin.keystore.password">#{samlProperties['saml2.sp.keystore.password']}</prop>
+				<prop key="org.apache.wss4j.crypto.merlin.keystore.alias">#{samlProperties['saml2.sp.key.alias']}</prop>
+				<prop key="org.apache.wss4j.crypto.merlin.truststore.file">#{samlProperties['saml2.idp.truststore']}</prop>
+				<prop key="org.apache.wss4j.crypto.merlin.truststore.password">#{samlProperties['saml2.idp.truststore.password']}</prop>
+				<prop key="org.apache.wss4j.crypto.merlin.truststore.type">#{samlProperties['saml2.idp.truststore.type']}</prop>
+			</util:properties>
+		</constructor-arg>
+		<constructor-arg index="1"><null/></constructor-arg>
+		<constructor-arg index="2"><null/></constructor-arg>
+	</bean>
+
+	<bean id="passwordCallbackHandler" class="eu.redbyte.upvsdemo.security.PasswordCallbackHandler">
+		<constructor-arg index="0" value="#{samlProperties['saml2.sp.key.alias']}"/>
+		<constructor-arg index="1" value="#{samlProperties['saml2.sp.key.password']}"/>
+	</bean>
+
+	<bean id="stateManager" class="org.apache.cxf.rs.security.saml.sso.state.EHCacheSPStateManager">
+		<constructor-arg ref="cxf"/>
+	</bean>
+
+	<bean id="redirectGetFilter" class="org.apache.cxf.rs.security.saml.sso.SamlRedirectBindingFilter">
+		<property name="issuerId" value="#{samlProperties['saml2.sp.issuer.id']}"/>
+		<property name="idpServiceAddress" value="#{samlProperties['saml2.idp.url.binding.redirect']}"/>
+		<property name="assertionConsumerServiceAddress" value="#{samlProperties['saml2.idp.url.binding.consumerBaseUrl']}/saml/ac/sso"/>
+		<property name="stateProvider" ref="stateManager"/>
+		<property name="addWebAppContext" value="false"/>
+		<property name="signRequest" value="true"/>
+		<property name="callbackHandler" ref="passwordCallbackHandler"/>
+		<property name="signatureUsername" value="#{samlProperties['saml2.sp.key.alias']}"/>
+		<property name="signatureCrypto" ref="samlSignatureCrypto"/>
+		<property name="authnRequestBuilder">
+			<bean class="eu.redbyte.upvsdemo.security.UpvsAuthnRequestBuilder">
+				<constructor-arg index="0" value="false"/>
+				<constructor-arg index="1" value="false" />
+			</bean>
+		</property>
+	</bean>
+
+	<bean id="consumerService" class="org.apache.cxf.rs.security.saml.sso.RequestAssertionConsumerService">
+		<property name="stateProvider" ref="stateManager"/>
+		<property name="supportDeflateEncoding" value="true"/>
+		<property name="supportBase64Encoding" value="true"/>
+		<property name="signatureCrypto" ref="samlSignatureCrypto"/>
+		<property name="enforceAssertionsSigned" value="true"/>
+		<property name="enforceKnownIssuer" value="false"/>
+		<property name="assertionConsumerServiceAddress" value="#{samlProperties['saml2.idp.url.binding.consumerBaseUrl']}/saml/ac/sso" />
+		<property name="callbackHandler" ref="passwordCallbackHandler"/>
+	</bean>
+
+	<bean id="webApplicationExceptionMapper" class="org.apache.cxf.jaxrs.impl.WebApplicationExceptionMapper">
+		<property name="addMessageToResponse" value="true" />
+	</bean>
+
+	<jaxrs:server address="/saml/ac">
+		<jaxrs:serviceBeans>
+			<ref bean="consumerService"/>
+		</jaxrs:serviceBeans>
+		<jaxrs:providers>
+			<ref bean="webApplicationExceptionMapper" />
+		</jaxrs:providers>
+		<!--<jaxrs:features>
+			<cxf:logging/>
+		</jaxrs:features>-->
+	</jaxrs:server>
+
+</beans>
