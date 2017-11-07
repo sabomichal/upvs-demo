@@ -48,6 +48,9 @@
 			<bean class="eu.redbyte.upvsdemo.security.UpvsAuthnRequestBuilder">
 				<constructor-arg index="0" value="false"/>
 				<constructor-arg index="1" value="false" />
+				<constructor-arg index="2" value="#{samlProperties['saml2.sp.authnContextComparisonType']}" />
+				<constructor-arg index="3" value="#{T(eu.redbyte.upvsdemo.security.UpvsAuthnRequestBuilder).PROTOCOL_BINDING_POST}" />
+				<constructor-arg index="4" value="#{T(eu.redbyte.upvsdemo.security.UpvsAuthnRequestBuilder).NAMEID_FORMAT_TRANSIENT}" />
 			</bean>
 		</property>
 	</bean>
