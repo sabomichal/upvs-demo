@@ -1,8 +1,24 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    ext {
+        springBootVersion = '2.0.6.RELEASE'
+    }
+
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
+
 plugins {
     id "java"
     id "war"
     id "no.nils.wsdl2java" version "0.10"
     id "org.gretty" version "2.2.0"
+    id "org.springframework.boot" version "2.0.6.RELEASE"
+    id "io.spring.dependency-management" version "1.0.6.RELEASE"
 }
 
 ext {
@@ -41,33 +57,44 @@ sourceSets {
 }
 
 dependencies {
-    compile group: 'org.apache.cxf', name: 'cxf-rt-frontend-jaxws', version: "${cxfVersion}"
-    compile group: 'org.apache.cxf', name: 'cxf-rt-transports-http', version: "${cxfVersion}"
-    compile group: 'org.apache.cxf', name: 'cxf-rt-ws-security', version: "${cxfVersion}"
-    compile group: 'org.apache.cxf', name: 'cxf-rt-ws-policy', version: "${cxfVersion}"
-    compile group: 'org.apache.cxf', name: 'cxf-rt-frontend-jaxrs', version: "${cxfVersion}"
-    compile group: 'org.apache.cxf', name: 'cxf-rt-rs-security-sso-saml', version: "${cxfVersion}"
-    compile group: 'org.springframework', name: 'spring-core', version: "${springVersion}"
-    compile group: 'org.springframework', name: 'spring-context', version: "${springVersion}"
-    compile group: 'org.springframework', name: 'spring-web', version: "${springVersion}"
-    compile group: 'org.slf4j', name: 'slf4j-api', version: "${slf4jVersion}"
-    compile group: 'com.fasterxml.jackson.jaxrs', name: 'jackson-jaxrs-json-provider', version: '2.9.0'
-    compile group: 'javax.xml.bind', name: 'jaxb-api', version: "${jaxbVersion}"
-    compile group: 'javax.xml.ws', name: 'jaxws-api', version: "${jaxWsVersion}"
-    compile group: 'javax.jws', name: 'javax.jws-api', version: "${jwsApiVersion}"
-    compile group: 'javax.activation', name: 'javax.activation-api', version: "${javaxActivationVersion}"
+    implementation('org.springframework.boot:spring-boot-starter-web')
+    implementation('org.apache.cxf:cxf-spring-boot-starter-jaxrs:3.2.6')
+    implementation('org.apache.cxf:cxf-spring-boot-starter-jaxws:3.2.6')
+    providedRuntime('org.springframework.boot:spring-boot-starter-tomcat')
+    testImplementation('org.springframework.boot:spring-boot-starter-test')
 
-    runtime group: 'org.slf4j', name: 'jcl-over-slf4j', version: "${slf4jVersion}"
-    runtime group: 'ch.qos.logback', name: 'logback-classic', version: '1.1.2'
-    runtime group: 'com.sun.xml.messaging.saaj', name: 'saaj-impl', version: "${saajVersion}"
-    runtime group: 'org.glassfish.jaxb', name: 'jaxb-runtime', version: "${jaxbVersion}"
+    /*implementation(group: 'org.apache.cxf', name: 'cxf-rt-frontend-jaxws', version: "${cxfVersion}")
+    implementation(group: 'org.apache.cxf', name: 'cxf-rt-transports-http', version: "${cxfVersion}")
+    implementation(group: 'org.apache.cxf', name: 'cxf-rt-ws-policy', version: "${cxfVersion}")
+    implementation(group: 'org.apache.cxf', name: 'cxf-rt-frontend-jaxrs', version: "${cxfVersion}")*/
+    implementation(group: 'org.apache.cxf', name: 'cxf-rt-ws-security', version: "${cxfVersion}")
+    implementation(group: 'org.apache.cxf', name: 'cxf-rt-rs-security-sso-saml', version: "${cxfVersion}")
+    /*implementation(group: 'org.springframework', name: 'spring-core', version: "${springVersion}")
+    implementation(group: 'org.springframework', name: 'spring-context', version: "${springVersion}")
+    implementation(group: 'org.springframework', name: 'spring-web', version: "${springVersion}")*/
+    /*implementation(group: 'org.slf4j', name: 'slf4j-api', version: "${slf4jVersion}")*/
+    implementation(group: 'com.fasterxml.jackson.jaxrs', name: 'jackson-jaxrs-json-provider', version: '2.9.0')
+    implementation(group: 'javax.xml.bind', name: 'jaxb-api', version: "${jaxbVersion}")
+    implementation(group: 'javax.xml.ws', name: 'jaxws-api', version: "${jaxWsVersion}")
+    implementation(group: 'javax.jws', name: 'javax.jws-api', version: "${jwsApiVersion}")
+    implementation(group: 'javax.activation', name: 'javax.activation-api', version: "${javaxActivationVersion}")
 
-    wsdl2java group: 'javax.xml.bind', name: 'jaxb-api', version: "${jaxbVersion}"
-    wsdl2java group: 'org.glassfish.jaxb', name: 'jaxb-runtime', version: "${jaxbVersion}"
-    wsdl2java group: 'javax.xml.ws', name: 'jaxws-api', version: "${jaxWsVersion}"
-    wsdl2java group: 'javax.jws', name: 'javax.jws-api', version: "${jwsApiVersion}"
-    wsdl2java group: 'javax.activation', name: 'javax.activation-api', version: "${javaxActivationVersion}"
+    /*runtimeOnly (group: 'org.slf4j', name: 'jcl-over-slf4j', version: "${slf4jVersion}")
+    runtimeOnly (group: 'ch.qos.logback', name: 'logback-classic', version: '1.1.2')*/
+    runtimeOnly(group: 'com.sun.xml.messaging.saaj', name: 'saaj-impl', version: "${saajVersion}")
+    runtimeOnly(group: 'org.glassfish.jaxb', name: 'jaxb-runtime', version: "${jaxbVersion}")
+
+    wsdl2java(group: 'javax.xml.bind', name: 'jaxb-api', version: "${jaxbVersion}")
+    wsdl2java(group: 'org.glassfish.jaxb', name: 'jaxb-runtime', version: "${jaxbVersion}")
+    wsdl2java(group: 'javax.xml.ws', name: 'jaxws-api', version: "${jaxWsVersion}")
+    wsdl2java(group: 'javax.jws', name: 'javax.jws-api', version: "${jwsApiVersion}")
+    wsdl2java(group: 'javax.activation', name: 'javax.activation-api', version: "${javaxActivationVersion}")
 }
+
+/*configurations {
+ *//*   all*.exclude module: "spring-boot-starter-logging"*//*
+    all*.exclude module: "spring-boot-starter-tomcat"
+}*/
 
 wsdl2javaExt {
     cxfVersion = "3.2.4"
