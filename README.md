@@ -5,8 +5,11 @@ Featuring:
 * UPVS STS service
 * UPVS IAM service
 
+## Requirements
+Java JRE 11
+
 ## Spustenie demo aplikacie
-Spustenie je mozne priamo v embedded jetty kontaineri:
+Spustenie je mozne priamo v embedded tomcat kontajneri:
 
 `
 gradlew appStart
