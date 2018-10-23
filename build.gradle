@@ -1,0 +1,104 @@
+plugins {
+    id "java"
+    id "war"
+    id "no.nils.wsdl2java" version "0.10"
+    id "org.gretty" version "2.2.0"
+}
+
+ext {
+    cxfVersion = "3.2.6"
+    springVersion = "5.1.0.RELEASE"
+    jaxbVersion = "2.3.1"
+    jaxWsVersion = "2.3.1"
+    javaxActivationVersion = "1.2.0"
+    jwsApiVersion = "1.1"
+    saajVersion = "1.4.0"
+    slf4jVersion = "1.7.7"
+}
+
+group = "eu.redbyte"
+version = "1.0.0"
+
+description = """upvs-sample"""
+
+sourceCompatibility = 11
+targetCompatibility = 11
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+repositories {
+    jcenter()
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir "$buildDir/generated-sources/wsdl"
+        }
+    }
+}
+
+dependencies {
+    compile group: 'org.apache.cxf', name: 'cxf-rt-frontend-jaxws', version: "${cxfVersion}"
+    compile group: 'org.apache.cxf', name: 'cxf-rt-transports-http', version: "${cxfVersion}"
+    compile group: 'org.apache.cxf', name: 'cxf-rt-ws-security', version: "${cxfVersion}"
+    compile group: 'org.apache.cxf', name: 'cxf-rt-ws-policy', version: "${cxfVersion}"
+    compile group: 'org.apache.cxf', name: 'cxf-rt-frontend-jaxrs', version: "${cxfVersion}"
+    compile group: 'org.apache.cxf', name: 'cxf-rt-rs-security-sso-saml', version: "${cxfVersion}"
+    compile group: 'org.springframework', name: 'spring-core', version: "${springVersion}"
+    compile group: 'org.springframework', name: 'spring-context', version: "${springVersion}"
+    compile group: 'org.springframework', name: 'spring-web', version: "${springVersion}"
+    compile group: 'org.slf4j', name: 'slf4j-api', version: "${slf4jVersion}"
+    compile group: 'com.fasterxml.jackson.jaxrs', name: 'jackson-jaxrs-json-provider', version: '2.9.0'
+    compile group: 'javax.xml.bind', name: 'jaxb-api', version: "${jaxbVersion}"
+    compile group: 'javax.xml.ws', name: 'jaxws-api', version: "${jaxWsVersion}"
+    compile group: 'javax.jws', name: 'javax.jws-api', version: "${jwsApiVersion}"
+    compile group: 'javax.activation', name: 'javax.activation-api', version: "${javaxActivationVersion}"
+
+    runtime group: 'org.slf4j', name: 'jcl-over-slf4j', version: "${slf4jVersion}"
+    runtime group: 'ch.qos.logback', name: 'logback-classic', version: '1.1.2'
+    runtime group: 'com.sun.xml.messaging.saaj', name: 'saaj-impl', version: "${saajVersion}"
+    runtime group: 'org.glassfish.jaxb', name: 'jaxb-runtime', version: "${jaxbVersion}"
+
+    wsdl2java group: 'javax.xml.bind', name: 'jaxb-api', version: "${jaxbVersion}"
+    wsdl2java group: 'org.glassfish.jaxb', name: 'jaxb-runtime', version: "${jaxbVersion}"
+    wsdl2java group: 'javax.xml.ws', name: 'jaxws-api', version: "${jaxWsVersion}"
+    wsdl2java group: 'javax.jws', name: 'javax.jws-api', version: "${jwsApiVersion}"
+    wsdl2java group: 'javax.activation', name: 'javax.activation-api', version: "${javaxActivationVersion}"
+}
+
+wsdl2javaExt {
+    cxfVersion = "3.2.4"
+}
+
+wsdl2java {
+    encoding = 'UTF-8'
+    generatedWsdlDir = file("$buildDir/generated-sources/wsdl")
+    wsdlDir = file("$projectDir/src/main/resources/wsdl")
+    wsdlsToGenerate = [
+            ["-xjc-no-header", "$projectDir/src/main/resources/wsdl/identity/GetIdentityService.wsdl"],
+            ["-xjc-no-header", "$projectDir/src/main/resources/wsdl/sts/wss11x509.wsdl"]
+    ]
+}
+
+gretty {
+    servletContainer = "tomcat8"
+    httpPort = 8088
+    debugPort = 9009
+    debugSuspend = false
+    contextPath = "/"
+    interactiveMode = "rebuildAndRestartOnKeyPress"
+
+    fastReload = true
+    fastReload "$project.buildDir/resources/main"
+    fastReload "$project.webAppDir"
+
+    scanInterval = 0
+    reloadOnClassChange = false
+    reloadOnLibChange = false
+    reloadOnConfigChange = false
+}
+
+tasks.compileJava.dependsOn wsdl2java

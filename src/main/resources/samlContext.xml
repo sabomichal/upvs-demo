@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:util="http://www.springframework.org/schema/util"
-       xmlns:jaxrs="http://cxf.apache.org/jaxrs"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:util="http://www.springframework.org/schema/util"
+	   xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+	   xmlns:cxf="http://cxf.apache.org/core"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 							http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
-							http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd">
+							http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
+                            http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd">
 
 	<util:properties id="samlProperties" location="classpath:/properties/saml.properties" />
 
@@ -39,6 +41,7 @@
 		<property name="idpServiceAddress" value="#{samlProperties['saml2.idp.url.binding.redirect']}"/>
 		<property name="assertionConsumerServiceAddress" value="#{samlProperties['saml2.idp.url.binding.consumerBaseUrl']}/saml/ac/sso"/>
 		<property name="stateProvider" ref="stateManager"/>
+		<property name="stateTimeToLive" value="#{5L * 60L * 1000L}" />
 		<property name="addWebAppContext" value="false"/>
 		<property name="signRequest" value="true"/>
 		<property name="callbackHandler" ref="passwordCallbackHandler"/>
@@ -77,9 +80,9 @@
 		<jaxrs:providers>
 			<ref bean="webApplicationExceptionMapper" />
 		</jaxrs:providers>
-		<!--<jaxrs:features>
+		<jaxrs:features>
 			<cxf:logging/>
-		</jaxrs:features>-->
+		</jaxrs:features>
 	</jaxrs:server>
 
 </beans>

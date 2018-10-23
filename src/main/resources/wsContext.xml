@@ -96,6 +96,11 @@
                     <util:constant static-field="org.apache.cxf.ws.security.SecurityConstants.STS_CLIENT"/>
                 </key>
             </entry>
+            <entry value="true">
+                <key>
+                    <util:constant static-field="org.apache.cxf.endpoint.ClientImpl.THREAD_LOCAL_REQUEST_CONTEXT"/>
+                </key>
+            </entry>
         </jaxws:properties>
         <jaxws:features>
             <wsa:addressing allowDuplicates="false" xmlns:wsa="http://cxf.apache.org/ws/addressing"/>

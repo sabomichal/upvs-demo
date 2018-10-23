@@ -1,5 +1,6 @@
 package eu.redbyte.upvsdemo.rest.sso;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.cxf.rs.security.saml.sso.SSOConstants;
@@ -26,11 +27,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 import javax.xml.stream.XMLStreamException;
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
 /**
  * @author Michal Sabo
@@ -39,50 +37,50 @@ import java.util.Map;
 @Service
 public class SsoLoginService {
 
-	private static final Logger log = LoggerFactory.getLogger(SsoLoginService.class);
+    private static final Logger log = LoggerFactory.getLogger(SsoLoginService.class);
 
-	@Autowired
-	private SPStateManager stateProvider;
+    @Autowired
+    private SPStateManager stateProvider;
 
-	@Context
-	private MessageContext mc;
+    @Context
+    private MessageContext mc;
 
-	@Context
-	private HttpServletRequest request;
+    @Context
+    private HttpServletRequest request;
 
-	@GET
-	public String process(@CookieParam(SSOConstants.SECURITY_CONTEXT_TOKEN) String securityContextKey) {
-		log.info("UPVS SAML WEB SSO assertion retrieved successfully");
-		try {
-			String actorId = retrieveAttribute(securityContextKey, UpvsSamlAttributes.ACTORID_ATTR);
-			log.info("Attribute actorId retrieved: {}", actorId);
-			return actorId;
-		} catch (Exception e) {
-			throw new InternalServerErrorException("Error has occured", e);
-		}
-	}
+    @GET
+    public String process(@CookieParam(SSOConstants.SECURITY_CONTEXT_TOKEN) String securityContextKey) {
+        log.info("UPVS SAML WEB SSO assertion retrieved successfully");
+        try {
+            var actorId = retrieveAttribute(securityContextKey, UpvsSamlAttributes.ACTORID_ATTR);
+            log.info("Attribute actorId retrieved: {}", actorId);
+            return actorId;
+        } catch (Exception e) {
+            throw new InternalServerErrorException("Error has occured", e);
+        }
+    }
 
-	private String retrieveAttribute(String securityContextKey, String attributeName) throws UnsupportedEncodingException, XMLStreamException, WSSecurityException {
-		String assertionString = getAssertion(securityContextKey);
-		InputStream tokenStream = new ByteArrayInputStream(assertionString.getBytes(StandardCharsets.UTF_8));
-		Document responseDoc = StaxUtils.read(new InputStreamReader(tokenStream, StandardCharsets.UTF_8));
-		Assertion assertion = (Assertion) OpenSAMLUtil.fromDom(responseDoc.getDocumentElement());
+    private String retrieveAttribute(String securityContextKey, String attributeName) throws XMLStreamException, WSSecurityException {
+        String assertionString = getAssertion(securityContextKey);
+        ByteArrayInputStream tokenStream = new ByteArrayInputStream(assertionString.getBytes(StandardCharsets.UTF_8));
+        Document responseDoc = StaxUtils.read(new InputStreamReader(tokenStream, StandardCharsets.UTF_8));
+        Assertion assertion = (Assertion) OpenSAMLUtil.fromDom(responseDoc.getDocumentElement());
 
-		if (assertion.getAttributeStatements().isEmpty()) {
-			throw new BadRequestException();
-		}
+        if (assertion.getAttributeStatements().isEmpty()) {
+            throw new BadRequestException();
+        }
 
-		AttributeStatement attributeStatement = assertion.getAttributeStatements().get(0);
-		Map<String, Attribute> attributeMap = Maps.uniqueIndex(attributeStatement.getAttributes(), Attribute::getName);
-		Attribute upvsIdAttr = attributeMap.get(attributeName);
-		if (upvsIdAttr == null || upvsIdAttr.getAttributeValues().size() != 1) {
-			throw new BadRequestException();
-		}
-		return upvsIdAttr.getAttributeValues().get(0).getDOM().getTextContent();
-	}
+        AttributeStatement attributeStatement = assertion.getAttributeStatements().get(0);
+        ImmutableMap<String, Attribute> attributeMap = Maps.uniqueIndex(attributeStatement.getAttributes(), Attribute::getName);
+        Attribute upvsIdAttr = attributeMap.get(attributeName);
+        if (upvsIdAttr == null || upvsIdAttr.getAttributeValues().size() != 1) {
+            throw new BadRequestException();
+        }
+        return upvsIdAttr.getAttributeValues().get(0).getDOM().getTextContent();
+    }
 
-	private String getAssertion(String securityContextKey) {
-		ResponseState responseState = stateProvider.getResponseState(securityContextKey);
-		return responseState.getAssertion();
-	}
+    private String getAssertion(String securityContextKey) {
+        ResponseState responseState = stateProvider.getResponseState(securityContextKey);
+        return responseState.getAssertion();
+    }
 }

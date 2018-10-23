@@ -10,6 +10,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 /**
  * @author Michal Sabo
@@ -25,11 +27,12 @@ public class IdentityService {
 
     @GET
     @Path("status/{ico}")
-    public String status(@PathParam("ico") String ico) {
+    @Produces(MediaType.APPLICATION_JSON + "; charset=UTF-8")
+    public IdentityResult status(@PathParam("ico") String ico) {
         try {
             String result = upvsService.getEdeskStatusByIco(ico);
             log.info("Status schranky pre ICO={}: {}", ico, result);
-            return result;
+            return new IdentityResult(ico, result);
         } catch (Exception e) {
             throw new InternalServerErrorException("Error has occured", e);
         }

@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import sk.gov.schemas.identity.identitydata._1.EeDeskStatus;
 import sk.gov.schemas.identity.identitydata._1.IdentityData;
 import sk.gov.schemas.identity.service._1.CorporateBodyRequestType;
 import sk.gov.schemas.identity.service._1.GetEdeskInfoRequest;
