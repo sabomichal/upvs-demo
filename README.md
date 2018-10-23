@@ -9,7 +9,7 @@ Featuring:
 Spustenie je mozne priamo v embedded jetty kontaineri:
 
 `
-mvn jetty:run
+gradlew appStart
 `
 
 Demo aplikacia pocuva na porte 8088.
