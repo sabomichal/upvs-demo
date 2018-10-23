@@ -5,11 +5,14 @@ Featuring:
 * UPVS STS service
 * UPVS IAM service
 
+## Requirements
+Java JRE 11
+
 ## Spustenie demo aplikacie
-Spustenie je mozne priamo v embedded jetty kontaineri:
+Spustenie je mozne priamo v embedded tomcat kontajneri:
 
 `
-mvn jetty:run
+gradlew appStart
 `
 
 Demo aplikacia pocuva na porte 8088.
